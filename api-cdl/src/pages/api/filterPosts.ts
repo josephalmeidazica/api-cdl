@@ -7,24 +7,9 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   const { searchString } = req.query
-  const resultPosts = await prisma.post.findMany({
+  const resultPosts = await prisma.estabelecimento.findMany({
     where: {
-      OR: [
-        {
-          title: {
-            contains: Array.isArray(searchString)
-              ? searchString[0]
-              : searchString,
-          },
-        },
-        {
-          content: {
-            contains: Array.isArray(searchString)
-              ? searchString[0]
-              : searchString,
-          },
-        },
-      ],
+      
     },
   })
   return res.json(resultPosts)
