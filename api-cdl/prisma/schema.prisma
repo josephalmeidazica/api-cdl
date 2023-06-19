@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Tipo {
+  id              Int               @id @default(autoincrement())
+  nome            String?
+  Estabelecimento Estabelecimento[]
+}
+
+model Onibus {
+  id                  Int                   @id @default(autoincrement())
+  nome                String?
+  OnibusOnLocalizacao OnibusOnLocalizacao[]
+}
+
+model Localizacao {
+  id                  Int                   @id @default(autoincrement())
+  cep                 String?
+  rua                 String?
+  bairro              String?
+  numero              String?
+  Estabelecimento     Estabelecimento[]
+  OnibusOnLocalizacao OnibusOnLocalizacao[]
+}
+
+model OnibusOnLocalizacao {
+  onibus        Onibus      @relation(fields: [onibusId], references: [id])
+  onibusId      Int
+  localizacao   Localizacao @relation(fields: [localizacaoId], references: [id])
+  localizacaoId Int
+
+  @@id([onibusId, localizacaoId])
+}
+
+model Estabelecimento {
+  id            Int          @id @default(autoincrement())
+  tipo          Tipo?        @relation(fields: [idTipo], references: [id])
+  idTipo        Int?
+  local         Localizacao? @relation(fields: [idLocalizacao], references: [id])
+  idLocalizacao Int?
+  nome          String?
+  descricao     String?
+  nota          String?
+  Horario       Horario[]
+}
+
+model Semana {
+  id      Int       @id @default(autoincrement())
+  dia     String?
+  Horario Horario[]
+}
+
+model Horario {
+  id                Int              @id @default(autoincrement())
+  estabelecimento   Estabelecimento? @relation(fields: [idEstabelecimento], references: [id])
+  idEstabelecimento Int?
+  semana            Semana?          @relation(fields: [idSemana], references: [id])
+  idSemana          Int?
+  horario           String?
+}
