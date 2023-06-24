@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Router from 'next/router'
 import styles from '@/components/Header.module.css'
-import logo from './logo.png'
+import logo from './CDL.jpg'
 import Image from 'next/image'
 import { FcHome } from 'react-icons/fc';
 

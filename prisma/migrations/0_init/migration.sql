@@ -46,18 +46,10 @@ CREATE TABLE "Estabelecimento" (
 );
 
 -- CreateTable
-CREATE TABLE "Semana" (
-    "id" SERIAL NOT NULL,
-    "dia" TEXT,
-
-    CONSTRAINT "Semana_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Horario" (
     "id" SERIAL NOT NULL,
     "idEstabelecimento" INTEGER,
-    "idSemana" INTEGER,
+    "dia" TEXT,
     "horario" TEXT,
 
     CONSTRAINT "Horario_pkey" PRIMARY KEY ("id")
@@ -78,5 +70,3 @@ ALTER TABLE "Estabelecimento" ADD CONSTRAINT "Estabelecimento_idLocalizacao_fkey
 -- AddForeignKey
 ALTER TABLE "Horario" ADD CONSTRAINT "Horario_idEstabelecimento_fkey" FOREIGN KEY ("idEstabelecimento") REFERENCES "Estabelecimento"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- AddForeignKey
-ALTER TABLE "Horario" ADD CONSTRAINT "Horario_idSemana_fkey" FOREIGN KEY ("idSemana") REFERENCES "Semana"("id") ON DELETE SET NULL ON UPDATE CASCADE;

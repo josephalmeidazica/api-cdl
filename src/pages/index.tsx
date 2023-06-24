@@ -19,8 +19,13 @@ import { Button } from "@nextui-org/react";
 import {Location} from '../models/Location';
 import { PlacementProps } from './location/[id]'
 
+type Type = {
+  nome: string
+}
+
 type Props = {
-  feed: PlacementProps[]
+  feed: PlacementProps[],
+  types: Type[]
 }
 var weekDay = moment().format('dddd').toUpperCase();
 
@@ -29,7 +34,7 @@ const Blog: React.FC<Props> = (props) => {
   const [name,setName] = useState('')
   const [content, setContent] = useState('')
   const [authorEmail, setAuthorEmail] = useState('')
-  const [type, setType] = React.useState(new Set(["Bares"]));
+  const [type, setType] = React.useState(new Set(["Tipo"]));
   const [rate, setRate] = React.useState('');
   const [locations, setLocations] = React.useState<Location[]>([])
 
@@ -62,7 +67,7 @@ const Blog: React.FC<Props> = (props) => {
     <div >
     <Layout >
       <div >
-        <h2>{weekDay}</h2>
+        <h2 color='white'>{weekDay}</h2>
         <h3>{ moment()
       .utcOffset('-03:00')
       .format('DD/MM/YYYY hh:mm:ss')}</h3>
@@ -92,10 +97,17 @@ const Blog: React.FC<Props> = (props) => {
           selectionMode="single"
           typeKeys={type}
           //@ts-ignore
-          onSelectionChange={setType}>
-            <Dropdown.Item key="Bares">Bares</Dropdown.Item>
-            <Dropdown.Item key="Restaurantes">Restaurantes</Dropdown.Item>
-            <Dropdown.Item key="Sorveterias">Sorveterias</Dropdown.Item>
+          onSelectionChange={setType}
+          items={props.types}>
+            {(item) => (
+          <Dropdown.Item
+            //@ts-ignore
+            key={item.nome}
+          >
+            {//@ts-ignore
+            item.nome}
+          </Dropdown.Item>
+        )}
           </Dropdown.Menu>
         </Dropdown>
         <Spacer y={0.5} />
@@ -149,8 +161,12 @@ const Blog: React.FC<Props> = (props) => {
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const feed = await prisma.estabelecimento.findMany()
+  const types = await prisma.tipo.findMany()
   return {
-    props: { feed },
+    props: {
+      feed,
+      types
+    },
   }
 }
 

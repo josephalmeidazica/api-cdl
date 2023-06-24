@@ -52,17 +52,11 @@ model Estabelecimento {
   Horario       Horario[]
 }
 
-model Semana {
-  id      Int       @id @default(autoincrement())
-  dia     String?
-  Horario Horario[]
-}
 
 model Horario {
   id                Int              @id @default(autoincrement())
   estabelecimento   Estabelecimento? @relation(fields: [idEstabelecimento], references: [id])
   idEstabelecimento Int?
-  semana            Semana?          @relation(fields: [idSemana], references: [id])
-  idSemana          Int?
+  dia String?
   horario           String?
 }
