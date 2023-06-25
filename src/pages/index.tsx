@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { GetServerSideProps } from 'next'
 import Layout from '../components/Layout'
 import Post, { PostProps } from '../components/Post'
@@ -6,6 +6,7 @@ import prisma from '../lib/prisma'
 import styles from '@/styles/Blog.module.css'
 import moment from 'moment'
 import 'moment/locale/pt-br';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 import Router from 'next/router'
 import { Dropdown } from "@nextui-org/react";
@@ -17,11 +18,7 @@ import { FaStar } from 'react-icons/fa';
 import { BiMap } from 'react-icons/bi'
 import { Button } from "@nextui-org/react";
 import {Location} from '../models/Location';
-import { PlacementProps } from './location/[id]'
-
-type Type = {
-  nome: string
-}
+import { Local, PlacementProps, Type } from './location/[id]'
 
 type Props = {
   feed: PlacementProps[],
@@ -31,13 +28,13 @@ var weekDay = moment().format('dddd').toUpperCase();
 
 const Blog: React.FC<Props> = (props) => {
   const [title, setTitle] = useState('')
-  const [name,setName] = useState('')
+  const [name,setName] = useState('UNA')
   const [content, setContent] = useState('')
   const [authorEmail, setAuthorEmail] = useState('')
-  const [type, setType] = React.useState(new Set(["Tipo"]));
-  const [rate, setRate] = React.useState('');
+  const [type, setType] = React.useState(new Set(["Educacional"]));
+  const [rate, setRate] = React.useState('3');
   const [locations, setLocations] = React.useState<Location[]>([])
-
+  const [loaded, setLoaded] = useState<boolean>(false)
 
 
   const setInputValue = (value: React.SetStateAction<string>) =>{
@@ -49,20 +46,13 @@ const Blog: React.FC<Props> = (props) => {
     setLocations(arr => [...arr, new Location(name,type.values().next().value,rate)]);
   }
 
-  const submitData = async (e: React.SyntheticEvent) => {
-    e.preventDefault()
-    try {
-      const body = { title, content, authorEmail }
-      await fetch(`/api/post`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      await Router.push('/drafts')
-    } catch (error) {
-      console.error(error)
-    }
-  }
+  const fetchData = () =>{}
+
+  useEffect(() =>{
+    setLoaded(true);
+  },[loaded]);
+
+
   return (
     <div >
     <Layout >
@@ -73,26 +63,25 @@ const Blog: React.FC<Props> = (props) => {
       .format('DD/MM/YYYY hh:mm:ss')}</h3>
       </div>
       <div>
-        <form onSubmit={submitData} onChange={() => console.log('mudou')}>
+        <form onChange={() => console.log('mudou')}>
           <Spacer y={2.5} />
           <Input
             size="xl"
             onChange={(e) => setInputValue(e.target.value)}
             clearable
+            value={name}
             labelPlaceholder="Buscar estabelecimentos"
             contentLeft={
               <FcSearch />
             }
           />
-          <h3>{name}</h3>
-          <h3>{rate}</h3>
-          <h3>{type}</h3>
           <Spacer y={0.5} />
           <Dropdown>
           <Dropdown.Button light>{type}</Dropdown.Button>
           <Dropdown.Menu
           aria-label="Multiple selection actions"
           color="secondary"
+          placeholder='Tipo'
           disallowEmptySelection
           selectionMode="single"
           typeKeys={type}
@@ -137,21 +126,40 @@ const Blog: React.FC<Props> = (props) => {
         </form>
         <Spacer y={1} />
         <Grid.Container gap={2} justify="flex-start">
-        {props.feed.map((place) => (
-          <><Card
-            isPressable
-            isHoverable
-            variant="flat"
-            css={{ mw: "400px" }}
-          >
-            <Card.Body
-            onClick={() => Router.push('/location/[id]', `/location/${place.id}`)}
-            >
-              <Text> {place.nome}</Text>
-              <Text> <FaStar /> {place.nota}   <BiMap /> {place.descricao}</Text>
-            </Card.Body>
-          </Card><Spacer y={0.5} /></>
-        ))}
+        <InfiniteScroll
+          dataLength={props.feed.length}
+          next={fetchData}
+          hasMore={false} // Replace with a condition based on your data source
+          loader={<p>Loading...</p>}
+          height={400}
+          endMessage={<p>No more data to load.</p>}
+        >
+        {props.feed.map((place) => {
+          console.log(place)
+          console.log(type.values().next().value,name,rate)
+          let condition = type.values().next().value == "Tipo" ? true : false
+          if(place.tipo.nome == type.values().next().value
+          && place.nome.toLowerCase().includes(name.toLowerCase()) && place.nota >= rate)
+          {
+            return (
+              <>
+              <Card
+                isPressable
+                isHoverable
+                variant="flat"
+                css={{ mw: "400px", mh:"180px" }}
+              >
+                <Card.Body
+                onClick={() => Router.push('/location/[id]', `/location/${place.id}`)}
+                >
+                  <Text> {place.nome}</Text>
+                  <Text> <FaStar /> {place.nota} <BiMap />{place.local.rua},{place.local.numero} {place.local.bairro} </Text>
+                </Card.Body>
+              </Card><Spacer y={0.5} /></>
+            )
+          }
+        })}
+        </InfiniteScroll>
         </Grid.Container>
       </div>
     </Layout>
@@ -160,7 +168,12 @@ const Blog: React.FC<Props> = (props) => {
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const feed = await prisma.estabelecimento.findMany()
+  const feed = await prisma.estabelecimento.findMany({
+    include: {
+      local: true,
+      tipo: true
+    }
+  })
   const types = await prisma.tipo.findMany()
   return {
     props: {

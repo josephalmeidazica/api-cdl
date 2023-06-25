@@ -17,7 +17,7 @@ const Layout: React.FC<Props> = (props) => (
           backgroundRepeat: "no-repeat",
           objectFit: 'contain',
           width: '100vw',
-          height: '100vh'
+          height: '120vh'
 
         }} >
     <Header />
