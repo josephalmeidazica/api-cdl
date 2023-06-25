@@ -7,6 +7,8 @@ import prisma from '../../lib/prisma'
 import styles from '@/styles/Post.module.css'
 import { FaStar } from 'react-icons/fa';
 import { BiMap } from 'react-icons/bi'
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { Table } from "@nextui-org/react";
 
 export type PlacementProps = {
   local: Local
@@ -17,6 +19,7 @@ export type PlacementProps = {
   distance: string,
   idLocalizacao: number,
   tipo: Type
+  Horario: any
 }
 
 export type Type = {
@@ -31,6 +34,11 @@ export type Local = {
   id: number
 }
 
+type Horario = {
+  id: number
+  dia: string
+  horario: string
+}
 
 type UserLocation = {
   longitude: number,
@@ -53,6 +61,8 @@ const Post: React.FC<PlacementProps> = (props) => {
       return 'error';
     }
   }
+
+  const fetchData = () =>{}
 
   useEffect(() =>{
     if (navigator.geolocation) {
@@ -79,11 +89,49 @@ const Post: React.FC<PlacementProps> = (props) => {
   return (
     <Layout>
       <div>
-        <h1>{title}</h1>
+        <h2>{title}</h2>
         <h2><FaStar /> {props.nota} </h2>
         <h3><BiMap /> {distance}</h3>
-        <p> {props.local.rua} {props.local.numero}, {props.local.bairro} - {props.local.cep} </p>
+        <h4> {props.local.rua} {props.local.numero}, {props.local.bairro} - {props.local.cep} </h4>
+        <InfiniteScroll
+          dataLength={1}
+          next={fetchData}
+          hasMore={false} // Replace with a condition based on your data source
+          loader={<p>Loading...</p>}
+          height={300}
+        >
         <ReactMarkdown>{props.descricao}</ReactMarkdown>
+        </InfiniteScroll>
+        <InfiniteScroll
+          dataLength={7}
+          next={fetchData}
+          hasMore={false} // Replace with a condition based on your data source
+          loader={<p>Loading...</p>}
+          height={300}
+        >
+          <Table
+            aria-label="Example table with static content"
+            css={{
+              height: "auto",
+              minWidth: "100%",
+            }}
+          >
+          <Table.Header>
+            <Table.Column>Dia</Table.Column>
+            <Table.Column>Horário</Table.Column>
+          </Table.Header>
+          <Table.Body items={props.Horario}>
+          {(item) => (
+            <Table.Row key={
+              //@ts-ignore
+              item.id}>
+              {(columnKey) => <Table.Cell>{//@ts-ignore
+              columnKey == '.0.0' ? item.dia : (item.horario == null ? 'Sem dados' : item.horario)}</Table.Cell>}
+          </Table.Row>
+        )}
+      </Table.Body>
+        </Table>
+        </InfiniteScroll>
       </div>
     </Layout>
   )
@@ -97,7 +145,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   )
   const post = await prisma.estabelecimento.findUnique({
     where: { id },
-    include: {local:true}
+    include: {local:true,Horario: true}
+  })
+
+  const times = await prisma.horario.findMany({
+    where: {
+      idEstabelecimento: id
+    }
   })
 
   id = Number(post?.idLocalizacao)
@@ -105,7 +159,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const location = await prisma.localizacao.findUnique({
     where: { id },
   })
-  return { props: { ...post, ...location } }
+  console.log({ ...post, ...location, ...times })
+  return { props: { ...post, ...location, ...times } }
 }
 
 export default Post
