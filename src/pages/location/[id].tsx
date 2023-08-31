@@ -64,7 +64,8 @@ const Post: React.FC<PlacementProps> = (props) => {
 
   const fetchData = () =>{}
 
-  useEffect(() =>{
+  useEffect(() =>
+  {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const latitude = position.coords.latitude;

@@ -21,7 +21,7 @@ import {Location} from '../models/Location';
 import { Local, PlacementProps, Type } from './location/[id]'
 
 type Props = {
-  feed: PlacementProps[],
+  estabelecimentos: PlacementProps[],
   types: Type[]
 }
 var weekDay = moment().format('dddd').toUpperCase();
@@ -127,17 +127,17 @@ const Blog: React.FC<Props> = (props) => {
         <Spacer y={1} />
         <Grid.Container gap={2} justify="flex-start">
         <InfiniteScroll
-          dataLength={props.feed.length}
+          dataLength={props.estabelecimentos.length}
           next={fetchData}
           hasMore={false} // Replace with a condition based on your data source
           loader={<p>Loading...</p>}
-          height={400}
+          height={800}
           endMessage={<p>No more data to load.</p>}
         >
-        {props.feed.map((place) => {
+        {props.estabelecimentos.map((place) => {
           console.log(place)
-          console.log(type.values().next().value,name,rate)
-          let condition = type.values().next().value == "Tipo" ? true : false
+          
+          //let condition = type.values().next().value == "Tipo" ? true : false
           if(place.tipo.nome == type.values().next().value
           && place.nome.toLowerCase().includes(name.toLowerCase()) && place.nota >= rate)
           {
@@ -168,7 +168,7 @@ const Blog: React.FC<Props> = (props) => {
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const feed = await prisma.estabelecimento.findMany({
+  const estabelecimentos = await prisma.estabelecimento.findMany({
     include: {
       local: true,
       tipo: true
@@ -177,7 +177,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
   const types = await prisma.tipo.findMany()
   return {
     props: {
-      feed,
+      estabelecimentos,
       types
     },
   }
